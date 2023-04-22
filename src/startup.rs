@@ -20,12 +20,12 @@ use tracing_actix_web::TracingLogger;
 use crate::authentication::reject_anonymous_users;
 use crate::configuration::Settings;
 use crate::domain::SubscriberName;
+use crate::email_client;
 use crate::email_client::{EmailClient, SenderInfo};
 use crate::routes::{
     admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out, login, login_form,
-    publish_newsletter, subscribe,
+    publish_newsletter, subscribe, publish_newsletter_form,
 };
-use crate::{email_client};
 
 pub struct Application {
     port: u16,
@@ -156,13 +156,14 @@ where
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe::<T>))
             .route("/subscriptions/confirm", web::get().to(confirm))
-            .route("/newsletters", web::post().to(publish_newsletter::<T>))
             .route("/", web::get().to(home))
             .route("/login", web::get().to(login_form))
             .route("/login", web::post().to(login))
             .service(
                 web::scope("/admin")
                     .wrap(from_fn(reject_anonymous_users))
+                    .route("/newsletters", web::post().to(publish_newsletter::<T>))
+                    .route("/newsletters", web::get().to(publish_newsletter_form))
                     .route("/dashboard", web::get().to(admin_dashboard))
                     .route("/password", web::get().to(change_password_form))
                     .route("/password", web::post().to(change_password))
