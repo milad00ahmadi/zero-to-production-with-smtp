@@ -5,7 +5,7 @@ use argon2::{
 };
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-use uuid::Uuid;
+
 
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
@@ -29,7 +29,7 @@ pub async fn validate_credentials(credentials: Credentials, pool: &PgPool) -> Re
             .to_string(),
     );
 
-    if let Some((stored_user_id, stored_password_hash)) = get_stored_credentials(&credentials.username, &pool)
+    if let Some((stored_user_id, stored_password_hash)) = get_stored_credentials(&credentials.username, pool)
         .await
         .map_err(AuthError::UnexpectedError)?
     {
@@ -53,7 +53,7 @@ fn verify_password_hash(
     password_candidate: Secret<String>,
 ) -> Result<(), AuthError> {
     //
-    let expected_password_hash = PasswordHash::new(&expected_password_hash.expose_secret())
+    let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
         .context("Failed to parse hash in PHC string format.")
         .map_err(AuthError::UnexpectedError)?;
 
