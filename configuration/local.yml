@@ -1,0 +1,8 @@
+application:
+  host: "127.0.0.1"
+  base_url: "http://127.0.0.1"
+email_client:
+  smtp_server: "mail.codinghero.ir"
+  port: 465
+  username: "me@codinghero.ir"
+

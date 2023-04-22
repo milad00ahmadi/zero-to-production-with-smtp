@@ -1,0 +1,16 @@
+application:
+  port: 8000
+  hmac_secret: "everythingstartssomewhereeverythingstartssomewhereverythingstartssomewheree"
+database:
+  host: "127.0.0.1"
+  port: 5432
+  username: "postgres"
+  password: "password"
+  database_name: "newsletter"
+email_client:
+  smtp_server: "localhost"
+  port: 465
+  username: "localhost"
+  password: "password"
+  name: "Milad"
+redis_uri: "redis://127.0.0.1:6379"
