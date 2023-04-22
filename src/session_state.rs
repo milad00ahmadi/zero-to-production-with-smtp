@@ -1,7 +1,7 @@
 use actix_session::{Session, SessionGetError, SessionInsertError, SessionExt};
-use actix_web::dev::{Extensions, Payload};
-use actix_web::{FromRequest, HttpMessage, HttpRequest};
-use anyhow::{anyhow, Context};
+use actix_web::dev::{Payload};
+use actix_web::{FromRequest, HttpRequest};
+
 use std::future::{ready, Ready};
 
 use uuid::Uuid;
