@@ -1,5 +1,5 @@
 use actix_web::{
-    http::{self, header},
+    http::{header},
     HttpResponse,
 };
 

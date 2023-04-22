@@ -50,7 +50,7 @@ where
     <T as AsyncTransport>::Error: 'static + Send + Sync,
     <T as AsyncTransport>::Error: std::error::Error,
 {
-    let new_subscriber: NewSubscriber = form.0.try_into().map_err(|e| SubscribeError::ValidationError(e))?;
+    let new_subscriber: NewSubscriber = form.0.try_into().map_err(SubscribeError::ValidationError)?;
 
     let mut transaction = pool
         .begin()

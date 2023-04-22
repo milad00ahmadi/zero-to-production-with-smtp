@@ -1,6 +1,6 @@
 use crate::helpers::{assert_is_redirect_to, spawn_app, TestAppConfiguration};
-use actix_web::http::header::LOCATION;
-use serde_json::json;
+
+
 use uuid::Uuid;
 
 #[tokio::test]

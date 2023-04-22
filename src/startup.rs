@@ -1,5 +1,6 @@
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
+use actix_web_lab::middleware::from_fn;
 use std::any::Any;
 use std::collections::HashMap;
 use std::net::TcpListener;
@@ -16,14 +17,15 @@ use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
 
+use crate::authentication::reject_anonymous_users;
 use crate::configuration::Settings;
 use crate::domain::SubscriberName;
 use crate::email_client::{EmailClient, SenderInfo};
 use crate::routes::{
-    admin_dashboard, change_password, change_password_form, confirm, health_check, home, login, login_form,
-    publish_newsletter, subscribe, log_out,
+    admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out, login, login_form,
+    publish_newsletter, subscribe,
 };
-use crate::{email_client, middlewares};
+use crate::{email_client};
 
 pub struct Application {
     port: u16,
@@ -117,10 +119,10 @@ impl ApplicationBuilder {
         <T as AsyncTransport>::Error: std::error::Error,
     {
         let email_client = self.get_item::<EmailClient<T>>(ApplicationData::EmailClient);
-        let application = Application::build(self.configuration, email_client)
+
+        Application::build(self.configuration, email_client)
             .await
-            .expect("Failed to build the application");
-        application
+            .expect("Failed to build the application")
     }
 }
 
@@ -148,7 +150,6 @@ where
     let redis_store = RedisSessionStore::new(redis_uri.expose_secret()).await?;
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(middlewares::Auth)
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
             .wrap(TracingLogger::default())
@@ -159,10 +160,14 @@ where
             .route("/", web::get().to(home))
             .route("/login", web::get().to(login_form))
             .route("/login", web::post().to(login))
-            .route("/admin/dashboard", web::get().to(admin_dashboard))
-            .route("/admin/password", web::get().to(change_password_form))
-            .route("/admin/password", web::post().to(change_password))
-            .route("/admin/logout", web::post().to(log_out))
+            .service(
+                web::scope("/admin")
+                    .wrap(from_fn(reject_anonymous_users))
+                    .route("/dashboard", web::get().to(admin_dashboard))
+                    .route("/password", web::get().to(change_password_form))
+                    .route("/password", web::post().to(change_password))
+                    .route("/logout", web::post().to(log_out)),
+            )
             .app_data(connection.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())

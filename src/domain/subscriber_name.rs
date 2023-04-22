@@ -13,7 +13,7 @@ impl SubscriberName {
         let contains_forbidden_characters = s.chars().any(|g| forbidden_characters.contains(&g));
 
         if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
-            return Err(format!("{} not a valid subscriber name", s));
+            Err(format!("{} not a valid subscriber name", s))
         } else {
             Ok(Self(s))
         }
@@ -22,7 +22,7 @@ impl SubscriberName {
 
 impl AsRef<str> for SubscriberName {
     fn as_ref(&self) -> &str {
-        return &self.0;
+        &self.0
     }
 }
 

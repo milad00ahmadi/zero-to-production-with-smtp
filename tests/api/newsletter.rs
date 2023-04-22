@@ -97,7 +97,7 @@ async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
     );
 
     assert_eq!(request.status(), 200);
-    app.get_confirmation_links(&transport).await
+    app.get_confirmation_links(transport).await
 }
 
 async fn create_confirmed_subscriber(app: &TestApp) {
