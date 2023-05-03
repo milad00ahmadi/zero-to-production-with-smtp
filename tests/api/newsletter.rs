@@ -3,15 +3,15 @@ use fake::{
     Fake,
 };
 use lettre::transport::stub::AsyncStubTransport;
-use sqlx::PgPool;
-use uuid::Uuid;
+
+
 
 use crate::helpers::{assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp, TestAppConfiguration};
 
 async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
-    let body = serde_urlencoded::to_string(&serde_json::json!({
+    let body = serde_urlencoded::to_string(serde_json::json!({
         "name": name,
         "email": email
     }))
@@ -19,7 +19,7 @@ async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
 
     let transport = app.email_client.get_transport_ref();
     let received_messages_count_before_sending_subscribe_request = transport.messages().await.len();
-    let request = app.post_subscription(body.into()).await.error_for_status().unwrap();
+    let request = app.post_subscription(body).await.error_for_status().unwrap();
 
     let received_messages_count_after_sending_subscriber_request = transport.messages().await.len();
     assert_eq!(
@@ -64,7 +64,7 @@ impl<'a> AsyncStubTransportSpy<'a> {
 
     pub async fn assert(&self) {
         let received_messages = self.transport_ref.messages().await.len();
-        assert_eq!(&self.received_messages_before_assert + &self.expect, received_messages);
+        assert_eq!(self.received_messages_before_assert + self.expect, received_messages);
     }
 }
 
@@ -112,7 +112,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     });
 
     let transport = app.email_client.get_transport_ref();
-    let spy = AsyncStubTransportSpy::new(&transport).await.expect(0);
+    let spy = AsyncStubTransportSpy::new(transport).await.expect(0);
 
     let response = app.post_newsletters(&newsletter_request_body).await;
 
@@ -147,7 +147,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
         "idempotency_key": uuid::Uuid::new_v4().to_string()
     });
     let transport = app.email_client.get_transport_ref();
-    let spy = AsyncStubTransportSpy::new(&transport).await.expect(1);
+    let spy = AsyncStubTransportSpy::new(transport).await.expect(1);
 
     let response = app.post_newsletters(&newsletter_request_body).await;
 
@@ -182,7 +182,7 @@ async fn newsletter_creation_is_idempotent() {
         "idempotency_key": uuid::Uuid::new_v4().to_string()
     });
     let transport = app.email_client.get_transport_ref();
-    let spy = AsyncStubTransportSpy::new(&transport).await.expect(1);
+    let spy = AsyncStubTransportSpy::new(transport).await.expect(1);
 
     let response = app.post_newsletters(&newsletter_request_body.clone()).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
@@ -223,7 +223,7 @@ async fn concurrent_form_submission_is_handled_gracefully() {
         "idempotency_key": uuid::Uuid::new_v4().to_string()
     });
     let transport = app.email_client.get_transport_ref();
-    let spy = AsyncStubTransportSpy::new(&transport).await.expect(1);
+    let spy = AsyncStubTransportSpy::new(transport).await.expect(1);
 
     let response1 = app.post_newsletters(&newsletter_request_body);
     let response2 = app.post_newsletters(&newsletter_request_body);

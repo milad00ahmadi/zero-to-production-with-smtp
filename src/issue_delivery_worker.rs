@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{time::Duration};
 
 use lettre::AsyncTransport;
 use sqlx::{PgPool, Postgres, Transaction};
@@ -6,7 +6,7 @@ use tracing::{field::display, Span};
 use uuid::Uuid;
 
 use crate::{
-    configuration::{self, Settings},
+    configuration::{Settings},
     domain::{SubscriberEmail, SubscriberName},
     email_client::{self, EmailClient, SenderInfo},
     startup::get_connection_pool,

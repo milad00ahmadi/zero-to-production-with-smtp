@@ -1,4 +1,4 @@
-use crate::{domain::SubscriberEmail, email_client::{EmailClient, MailTransport}};
+use crate::{domain::SubscriberEmail};
 use secrecy::{ExposeSecret, Secret};
 use serde_aux::prelude::*;
 use sqlx::postgres::PgConnectOptions;

@@ -1,24 +1,22 @@
 use std::fmt::Formatter;
 
-use actix_web::body::BoxBody;
-use actix_web::http::header::HeaderMap;
-use actix_web::http::StatusCode;
+
+
+
 use actix_web::web::ReqData;
-use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
+use actix_web::{web, HttpResponse};
 use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
-use lettre::AsyncTransport;
-use linkify::Span;
-use secrecy::Secret;
+
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
-use crate::authentication::{validate_credentials, AuthError, Credentials, UserId};
+use crate::authentication::{UserId};
 use crate::domain::SubscriberEmail;
-use crate::email_client::EmailClient;
-use crate::idempotency::{get_saved_response, save_response, try_processing, IdempotencyKey, NextAction};
-use crate::routes::admin::dashboard::get_username;
-use crate::routes::{error_chain_fmt, newsletter};
+
+use crate::idempotency::{save_response, try_processing, IdempotencyKey, NextAction};
+
+
 use crate::utils::{e400, e500, see_other};
 
 #[derive(serde::Deserialize)]

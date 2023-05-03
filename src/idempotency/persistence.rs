@@ -1,6 +1,6 @@
-use actix_web::{body::to_bytes, HttpRequest, HttpResponse};
-use anyhow::anyhow;
-use lettre::transport::smtp::response;
+use actix_web::{body::to_bytes, HttpResponse};
+
+
 use reqwest::StatusCode;
 use sqlx::{postgres::PgHasArrayType, PgPool, Postgres, Transaction};
 use uuid::Uuid;
