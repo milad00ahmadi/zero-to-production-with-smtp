@@ -1,7 +1,8 @@
 use crate::telemetry::spawn_blocking_with_tracing;
 use anyhow::Context;
 use argon2::{
-    password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier, Version,
+    password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher,
+    PasswordVerifier, Version,
 };
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
@@ -19,7 +20,10 @@ pub struct Credentials {
     pub(crate) password: Secret<String>,
 }
 
-pub async fn validate_credentials(credentials: Credentials, pool: &PgPool) -> Result<uuid::Uuid, AuthError> {
+pub async fn validate_credentials(
+    credentials: Credentials,
+    pool: &PgPool,
+) -> Result<uuid::Uuid, AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=4096,t=3,p=1$\
@@ -28,25 +32,31 @@ pub async fn validate_credentials(credentials: Credentials, pool: &PgPool) -> Re
             .to_string(),
     );
 
-    if let Some((stored_user_id, stored_password_hash)) = get_stored_credentials(&credentials.username, pool)
-        .await
-        .map_err(AuthError::UnexpectedError)?
+    if let Some((stored_user_id, stored_password_hash)) =
+        get_stored_credentials(&credentials.username, pool)
+            .await
+            .map_err(AuthError::UnexpectedError)?
     {
         user_id = Some(stored_user_id);
         expected_password_hash = stored_password_hash;
     }
 
-    spawn_blocking_with_tracing(move || verify_password_hash(expected_password_hash, credentials.password))
-        .await
-        .context("Failed to spawn a blocking task.")
-        .map_err(AuthError::UnexpectedError)??;
+    spawn_blocking_with_tracing(move || {
+        verify_password_hash(expected_password_hash, credentials.password)
+    })
+    .await
+    .context("Failed to spawn a blocking task.")
+    .map_err(AuthError::UnexpectedError)??;
 
     user_id
         .ok_or_else(|| anyhow::anyhow!("Unknown username."))
         .map_err(AuthError::InvalidCredentials)
 }
 
-#[tracing::instrument(name = "Verify password hash", skip(expected_password_hash, password_candidate))]
+#[tracing::instrument(
+    name = "Verify password hash",
+    skip(expected_password_hash, password_candidate)
+)]
 fn verify_password_hash(
     expected_password_hash: Secret<String>,
     password_candidate: Secret<String>,
@@ -57,7 +67,10 @@ fn verify_password_hash(
         .map_err(AuthError::UnexpectedError)?;
 
     Argon2::default()
-        .verify_password(password_candidate.expose_secret().as_bytes(), &expected_password_hash)
+        .verify_password(
+            password_candidate.expose_secret().as_bytes(),
+            &expected_password_hash,
+        )
         .context("Invalid password.")
         .map_err(AuthError::InvalidCredentials)
 }

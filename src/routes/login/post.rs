@@ -41,20 +41,22 @@ pub async fn login(
             Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/admin/dashboard"))
                 .finish())
-        },
+        }
         Err(e) => {
             let e = match e {
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
             Err(login_redirect(e))
-        },
+        }
     }
 }
 
 fn login_redirect(e: LoginError) -> InternalError<LoginError> {
     FlashMessage::error(e.to_string()).send();
-    let response = HttpResponse::SeeOther().insert_header((LOCATION, "/login")).finish();
+    let response = HttpResponse::SeeOther()
+        .insert_header((LOCATION, "/login"))
+        .finish();
     InternalError::from_response(e, response)
 }
 

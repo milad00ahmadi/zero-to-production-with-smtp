@@ -44,11 +44,11 @@ pub async fn reject_anonymous_users(
         Some(user_id) => {
             req.extensions_mut().insert(UserId(user_id));
             next.call(req).await
-        },
+        }
         None => {
             let response = see_other("/login");
             let e = anyhow!("The user has not logged in");
             Err(InternalError::from_response(e, response).into())
-        },
+        }
     }
 }

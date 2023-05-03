@@ -4,7 +4,9 @@ use fake::{
 };
 use lettre::transport::stub::AsyncStubTransport;
 
-use crate::helpers::{assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp, TestAppConfiguration};
+use crate::helpers::{
+    assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp, TestAppConfiguration,
+};
 
 async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
     let name: String = Name().fake();
@@ -17,7 +19,11 @@ async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
 
     let transport = app.email_client.get_transport_ref();
     let received_messages_count_before_sending_subscribe_request = transport.messages().await.len();
-    let request = app.post_subscription(body).await.error_for_status().unwrap();
+    let request = app
+        .post_subscription(body)
+        .await
+        .error_for_status()
+        .unwrap();
 
     let received_messages_count_after_sending_subscriber_request = transport.messages().await.len();
     assert_eq!(
@@ -62,7 +68,10 @@ impl<'a> AsyncStubTransportSpy<'a> {
 
     pub async fn assert(&self) {
         let received_messages = self.transport_ref.messages().await.len();
-        assert_eq!(self.received_messages_before_assert + self.expect, received_messages);
+        assert_eq!(
+            self.received_messages_before_assert + self.expect,
+            received_messages
+        );
     }
 }
 
@@ -227,7 +236,10 @@ async fn concurrent_form_submission_is_handled_gracefully() {
     let response2 = app.post_newsletters(&newsletter_request_body);
     let (response1, response2) = tokio::join!(response1, response2);
     assert_eq!(response1.status(), response2.status());
-    assert_eq!(response1.text().await.unwrap(), response2.text().await.unwrap());
+    assert_eq!(
+        response1.text().await.unwrap(),
+        response2.text().await.unwrap()
+    );
 
     app.dispatch_all_pending_emails().await;
     spy.assert().await;

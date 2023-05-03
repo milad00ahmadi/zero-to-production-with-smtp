@@ -23,8 +23,8 @@ use crate::domain::SubscriberName;
 use crate::email_client;
 use crate::email_client::{EmailClient, SenderInfo};
 use crate::routes::{
-    admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out, login, login_form,
-    publish_newsletter, publish_newsletter_form, subscribe,
+    admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out,
+    login, login_form, publish_newsletter, publish_newsletter_form, subscribe,
 };
 
 pub struct Application {
@@ -33,13 +33,19 @@ pub struct Application {
 }
 
 impl Application {
-    pub async fn build<T>(configuration: Settings, email_client: Arc<EmailClient<T>>) -> Result<Self, anyhow::Error>
+    pub async fn build<T>(
+        configuration: Settings,
+        email_client: Arc<EmailClient<T>>,
+    ) -> Result<Self, anyhow::Error>
     where
         T: 'static + AsyncTransport + Send + Sync,
         <T as AsyncTransport>::Error: 'static + Send + Sync,
         <T as AsyncTransport>::Error: std::error::Error,
     {
-        let address = format!("{}:{}", configuration.application.host, configuration.application.port);
+        let address = format!(
+            "{}:{}",
+            configuration.application.host, configuration.application.port
+        );
         let connection_pool = get_connection_pool(&configuration).await;
 
         tracing::info!("listening on {}", &address);
@@ -95,16 +101,23 @@ impl ApplicationBuilder {
         }
     }
 
-    pub fn store<T: Any + Send + Sync + 'static>(mut self, key: ApplicationData, email_client: Arc<T>) -> Self {
+    pub fn store<T: Any + Send + Sync + 'static>(
+        mut self,
+        key: ApplicationData,
+        email_client: Arc<T>,
+    ) -> Self {
         self.items.insert(key, email_client);
         self
     }
 
     pub async fn set_email_client_from_configuration(self) -> Self {
         let sender_email = self.configuration.email_client.sender().unwrap();
-        let sender_name = SubscriberName::parse(self.configuration.email_client.name.clone()).unwrap();
+        let sender_name =
+            SubscriberName::parse(self.configuration.email_client.name.clone()).unwrap();
         let sender = SenderInfo(sender_name, sender_email);
-        let email_client = email_client::create_email_client(self.configuration.email_client.clone(), sender).await;
+        let email_client =
+            email_client::create_email_client(self.configuration.email_client.clone(), sender)
+                .await;
         self.store(ApplicationData::EmailClient, Arc::new(email_client))
     }
 
@@ -155,7 +168,10 @@ where
     let server = HttpServer::new(move || {
         App::new()
             .wrap(message_framework.clone())
-            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
+            .wrap(SessionMiddleware::new(
+                redis_store.clone(),
+                secret_key.clone(),
+            ))
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe::<E>))

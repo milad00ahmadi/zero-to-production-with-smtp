@@ -50,7 +50,8 @@ where
     <T as AsyncTransport>::Error: 'static + Send + Sync,
     <T as AsyncTransport>::Error: std::error::Error,
 {
-    let new_subscriber: NewSubscriber = form.0.try_into().map_err(SubscribeError::ValidationError)?;
+    let new_subscriber: NewSubscriber =
+        form.0.try_into().map_err(SubscribeError::ValidationError)?;
 
     let mut transaction = pool
         .begin()
@@ -67,9 +68,14 @@ where
         .commit()
         .await
         .context("Failed to commit SQL transaction to store a new subscriber")?;
-    sends_confirmation_email(&email_client, &new_subscriber, &base_url.0, &subscription_token)
-        .await
-        .context("Failed to send a confirmation email.")?;
+    sends_confirmation_email(
+        &email_client,
+        &new_subscriber,
+        &base_url.0,
+        &subscription_token,
+    )
+    .await
+    .context("Failed to send a confirmation email.")?;
     Ok(HttpResponse::Ok().finish())
 }
 
@@ -179,7 +185,12 @@ where
         confirmation_link
     );
     email_client
-        .send_email(&new_subscriber.email, "Welcome".to_owned(), email_content, html_content)
+        .send_email(
+            &new_subscriber.email,
+            "Welcome".to_owned(),
+            email_content,
+            html_content,
+        )
         .await
 }
 
@@ -212,7 +223,10 @@ pub async fn insert_subscriber(
     Ok(subscriber_id)
 }
 
-pub fn error_chain_fmt(e: &impl std::error::Error, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+pub fn error_chain_fmt(
+    e: &impl std::error::Error,
+    f: &mut std::fmt::Formatter<'_>,
+) -> std::fmt::Result {
     writeln!(f, "{}\n", e)?;
     let mut current = e.source();
     while let Some(cause) = current {

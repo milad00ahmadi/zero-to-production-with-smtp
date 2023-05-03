@@ -61,7 +61,7 @@ where
                     Skipping"
                 );
             }
-        },
+        }
         Err(e) => {
             tracing::error!(
                     error.cause_chain = ?e,
@@ -69,7 +69,7 @@ where
                     "Skipping a confirmed subscriber \
                     Their stored contact details are invalid"
             );
-        },
+        }
     }
     delete_task(transaction, issue_id, &email).await?;
     Ok(ExecutionOutcome::TaskCompleted)
@@ -91,14 +91,22 @@ async fn deque_task(pool: &PgPool) -> Result<Option<(PgTransaction, Uuid, String
     .fetch_optional(&mut transaction)
     .await?;
     if let Some(r) = r {
-        Ok(Some((transaction, r.newsletter_issue_id, r.subscriber_email)))
+        Ok(Some((
+            transaction,
+            r.newsletter_issue_id,
+            r.subscriber_email,
+        )))
     } else {
         Ok(None)
     }
 }
 
 #[tracing::instrument(skip_all)]
-async fn delete_task(mut transaction: PgTransaction, issue_id: Uuid, email: &str) -> Result<(), anyhow::Error> {
+async fn delete_task(
+    mut transaction: PgTransaction,
+    issue_id: Uuid,
+    email: &str,
+) -> Result<(), anyhow::Error> {
     sqlx::query!(
         r#"
         DELETE FROM issue_delivery_queue
@@ -148,11 +156,11 @@ where
         match try_execute_task(&pool, &email_client).await {
             Ok(ExecutionOutcome::EmptyQueue) => {
                 tokio::time::sleep(Duration::from_secs(10)).await;
-            },
+            }
             Err(_) => {
                 tokio::time::sleep(Duration::from_secs(1)).await;
-            },
-            Ok(ExecutionOutcome::TaskCompleted) => {},
+            }
+            Ok(ExecutionOutcome::TaskCompleted) => {}
         }
     }
 }
@@ -162,6 +170,7 @@ pub async fn run_worker_until_stopped(configuration: Settings) -> Result<(), any
     let sender_email = configuration.email_client.sender().unwrap();
     let sender_name = SubscriberName::parse(configuration.email_client.name.clone()).unwrap();
     let sender = SenderInfo(sender_name, sender_email);
-    let email_client = email_client::create_email_client(configuration.email_client.clone(), sender).await;
+    let email_client =
+        email_client::create_email_client(configuration.email_client.clone(), sender).await;
     worker_loop(connection_pool, email_client).await
 }
