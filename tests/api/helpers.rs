@@ -12,8 +12,9 @@ use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings, Settings};
 use zero2prod::domain::SubscriberName;
 use zero2prod::email_client::{
-    create_email_client_stub_that_accepts_all_messages, EmailClient, SenderInfo, StubMailTransport,
+    create_email_client_stub_which_accepts_all_messages, EmailClient, SenderInfo, StubMailTransport,
 };
+use zero2prod::issue_delivery_worker::{try_execute_task, ExecutionOutcome};
 use zero2prod::startup::{ApplicationBuilder, ApplicationData};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
@@ -44,6 +45,13 @@ pub struct ConfirmationLinks {
 }
 
 impl TestApp {
+    pub async fn dispatch_all_pending_emails(&self) {
+        loop {
+            if let ExecutionOutcome::EmptyQueue = try_execute_task(&self.db_pool, &self.email_client).await.unwrap() {
+                break;
+            }
+        }
+    }
     pub async fn post_subscription(&self, body: String) -> reqwest::Response {
         self.api_client
             .post(format!("{}/subscriptions", &self.address))
@@ -77,7 +85,9 @@ impl TestApp {
     }
 
     pub async fn post_newsletters<Body>(&self, body: &Body) -> reqwest::Response
-    where Body: serde::Serialize {
+    where
+        Body: serde::Serialize,
+    {
         self.api_client
             .post(&format!("{}/admin/newsletters", &self.address))
             .form(body)
@@ -176,7 +186,7 @@ impl TestAppConfiguration {
         let sender = SenderInfo(SubscriberName::parse("test".into()).unwrap(), sender);
 
         TestAppConfiguration {
-            email_client: Arc::new(create_email_client_stub_that_accepts_all_messages(sender)),
+            email_client: Arc::new(create_email_client_stub_which_accepts_all_messages(sender)),
             configuration,
         }
     }
@@ -227,6 +237,14 @@ impl TestUser {
         .execute(pool)
         .await
         .expect("Failed to store test user.");
+    }
+
+    pub async fn login(&self, app: &TestApp) {
+        app.post_login(&serde_json::json!({
+            "username": &self.username,
+            "password": &self.password
+        }))
+        .await;
     }
 }
 

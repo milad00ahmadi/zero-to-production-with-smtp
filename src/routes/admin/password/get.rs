@@ -4,9 +4,7 @@ use actix_web::http::header::ContentType;
 use actix_web::HttpResponse;
 use actix_web_flash_messages::IncomingFlashMessages;
 
-pub async fn change_password_form(
-    flash_messages: IncomingFlashMessages,
-) -> Result<HttpResponse, actix_web::Error> {
+pub async fn change_password_form(flash_messages: IncomingFlashMessages) -> Result<HttpResponse, actix_web::Error> {
     let mut msg_html = String::new();
     for m in flash_messages.iter() {
         writeln!(msg_html, "<p><i>{}</i></p>", m.content()).unwrap();

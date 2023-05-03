@@ -1,4 +1,4 @@
-use crate::domain::SubscriberEmail;
+use crate::{domain::SubscriberEmail, email_client::{EmailClient, MailTransport}};
 use secrecy::{ExposeSecret, Secret};
 use serde_aux::prelude::*;
 use sqlx::postgres::PgConnectOptions;
@@ -59,6 +59,7 @@ impl DatabaseSettings {
             .port(self.port)
     }
 }
+
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     let mut settings = config::Config::default();

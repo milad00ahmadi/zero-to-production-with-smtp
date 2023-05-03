@@ -81,14 +81,15 @@ where
     }
 }
 
-pub fn create_email_client_stub_that_accepts_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
+
+pub fn create_email_client_stub_which_accepts_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
     EmailClient {
         sender,
         transport: AsyncStubTransport::new_ok(),
     }
 }
 
-pub fn create_email_client_stub_that_deny_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
+pub fn create_email_client_stub_which_denies_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
     EmailClient {
         sender,
         transport: AsyncStubTransport::new_error(),
@@ -126,7 +127,7 @@ mod tests {
 
     use crate::domain::{SubscriberEmail, SubscriberName};
     use crate::email_client::{
-        create_email_client_stub_that_accepts_all_messages, create_email_client_stub_that_deny_all_messages, SenderInfo,
+        create_email_client_stub_which_accepts_all_messages, create_email_client_stub_which_denies_all_messages, SenderInfo,
     };
 
     fn subject() -> String {
@@ -152,7 +153,7 @@ mod tests {
         let sender_email = email();
         let sender_name = SubscriberName::parse(FirstName().fake()).unwrap();
         let sender = SenderInfo(sender_name, sender_email.clone());
-        let email_client = create_email_client_stub_that_accepts_all_messages(sender);
+        let email_client = create_email_client_stub_which_accepts_all_messages(sender);
         let _transport = email_client.get_transport_ref();
 
         let subscriber_email = email();
@@ -184,7 +185,7 @@ mod tests {
         let sender_email = email();
         let sender_name = SubscriberName::parse(FirstName().fake()).unwrap();
         let sender = SenderInfo(sender_name, sender_email.clone());
-        let email_client = create_email_client_stub_that_deny_all_messages(sender);
+        let email_client = create_email_client_stub_which_denies_all_messages(sender);
         let _transport = email_client.get_transport_ref();
 
         let subscriber_email = email();

@@ -24,7 +24,7 @@ use crate::email_client;
 use crate::email_client::{EmailClient, SenderInfo};
 use crate::routes::{
     admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out, login, login_form,
-    publish_newsletter, subscribe, publish_newsletter_form,
+    publish_newsletter, publish_newsletter_form, subscribe,
 };
 
 pub struct Application {
@@ -40,9 +40,7 @@ impl Application {
         <T as AsyncTransport>::Error: std::error::Error,
     {
         let address = format!("{}:{}", configuration.application.host, configuration.application.port);
-        let connection_pool = PgPool::connect_with(configuration.database.with_db())
-            .await
-            .expect("Failed to connect to Postgres");
+        let connection_pool = get_connection_pool(&configuration).await;
 
         tracing::info!("listening on {}", &address);
         let listener = TcpListener::bind(address).expect("Failed to bind random port");
@@ -68,6 +66,12 @@ impl Application {
     pub async fn run_until_stopped(self) -> Result<(), std::io::Error> {
         self.server.await
     }
+}
+
+pub async fn get_connection_pool(configuration: &Settings) -> sqlx::Pool<sqlx::Postgres> {
+    PgPool::connect_with(configuration.database.with_db())
+        .await
+        .expect("Failed to connect to Postgres")
 }
 
 #[derive(Clone)]
@@ -128,18 +132,18 @@ impl ApplicationBuilder {
 
 pub struct ApplicationBaseUrl(pub String);
 
-pub async fn run<T>(
+pub async fn run<E>(
     listener: TcpListener,
     db_pool: PgPool,
-    email_client: Arc<EmailClient<T>>,
+    email_client: Arc<EmailClient<E>>,
     base_url: String,
     hmac_secret: Secret<String>,
     redis_uri: Secret<String>,
 ) -> Result<Server, anyhow::Error>
 where
-    T: 'static + AsyncTransport + Send + Sync,
-    <T as AsyncTransport>::Error: 'static + Send + Sync,
-    <T as AsyncTransport>::Error: std::error::Error,
+    E: 'static + AsyncTransport + Send + Sync,
+    <E as AsyncTransport>::Error: 'static + Send + Sync,
+    <E as AsyncTransport>::Error: std::error::Error,
 {
     let connection = web::Data::new(db_pool);
     let email_client = Data::from(email_client);
@@ -154,7 +158,7 @@ where
             .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
-            .route("/subscriptions", web::post().to(subscribe::<T>))
+            .route("/subscriptions", web::post().to(subscribe::<E>))
             .route("/subscriptions/confirm", web::get().to(confirm))
             .route("/", web::get().to(home))
             .route("/login", web::get().to(login_form))
@@ -162,7 +166,7 @@ where
             .service(
                 web::scope("/admin")
                     .wrap(from_fn(reject_anonymous_users))
-                    .route("/newsletters", web::post().to(publish_newsletter::<T>))
+                    .route("/newsletters", web::post().to(publish_newsletter::<E>))
                     .route("/newsletters", web::get().to(publish_newsletter_form))
                     .route("/dashboard", web::get().to(admin_dashboard))
                     .route("/password", web::get().to(change_password_form))

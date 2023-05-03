@@ -1,6 +1,5 @@
 use crate::helpers::{assert_is_redirect_to, spawn_app, TestAppConfiguration};
 
-
 use uuid::Uuid;
 
 #[tokio::test]
@@ -66,11 +65,7 @@ async fn current_password_must_be_valid() {
     let wrong_password = Uuid::new_v4().to_string();
     let new_password = Uuid::new_v4().to_string();
 
-    app.post_login(&serde_json::json!({
-        "username": &app.test_user.username,
-        "password": &app.test_user.password
-    }))
-    .await;
+    app.test_user.login(&app).await;
 
     let response = app
         .post_change_password(&serde_json::json!({
@@ -92,11 +87,7 @@ async fn changing_password_works() {
 
     let new_password = Uuid::new_v4().to_string();
 
-    app.post_login(&serde_json::json!({
-        "username": &app.test_user.username,
-        "password": &app.test_user.password
-    }))
-    .await;
+    app.test_user.login(&app).await;
 
     let response = app
         .post_change_password(&serde_json::json!({
