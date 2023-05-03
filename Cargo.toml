@@ -17,7 +17,7 @@ actix-web = "4"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 config = "0.11"
-uuid = { version = "0.8.1", features = ["v4", "serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 chrono = "0.4.15"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
@@ -52,7 +52,7 @@ futures-util = "0.3.28"
 actix-web-lab = "0.15"
 
 [dependencies.sqlx]
-version = "0.5.7"
+version = "0.6"
 default-features = false
 features = [
     "runtime-actix-rustls",
