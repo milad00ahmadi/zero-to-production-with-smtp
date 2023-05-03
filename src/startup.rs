@@ -100,11 +100,11 @@ impl ApplicationBuilder {
         self
     }
 
-    pub fn set_email_client_from_configuration(self) -> Self {
+    pub async fn set_email_client_from_configuration(self) -> Self {
         let sender_email = self.configuration.email_client.sender().unwrap();
         let sender_name = SubscriberName::parse(self.configuration.email_client.name.clone()).unwrap();
         let sender = SenderInfo(sender_name, sender_email);
-        let email_client = email_client::create_email_client(self.configuration.email_client.clone(), sender);
+        let email_client = email_client::create_email_client(self.configuration.email_client.clone(), sender).await;
         self.store(ApplicationData::EmailClient, Arc::new(email_client))
     }
 

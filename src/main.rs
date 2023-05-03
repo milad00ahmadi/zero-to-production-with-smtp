@@ -16,6 +16,7 @@ async fn main() -> anyhow::Result<()> {
     let configuration = get_configuration().expect("Failed to read configuration.");
     let application = ApplicationBuilder::new(configuration.clone())
         .set_email_client_from_configuration()
+        .await
         .build::<MailTransport>()
         .await;
     let application = tokio::spawn(application.run_until_stopped());
@@ -31,7 +32,7 @@ fn report_exit(task_name: &str, outcome: Result<Result<(), impl Debug + Display>
     match outcome {
         Ok(Ok(())) => {
             tracing::info!("{} has exited", task_name)
-        },
+        }
         Ok(Err(e)) => {
             tracing::error!(
             error.cause_chain = ?e,
@@ -39,7 +40,7 @@ fn report_exit(task_name: &str, outcome: Result<Result<(), impl Debug + Display>
             "{} failed",
             task_name
             )
-        },
+        }
         Err(e) => {
             tracing::error!(
             error.cause_chain = ?e,
@@ -47,6 +48,6 @@ fn report_exit(task_name: &str, outcome: Result<Result<(), impl Debug + Display>
             "{}' task failed to complete",
             task_name
             )
-        },
+        }
     }
 }

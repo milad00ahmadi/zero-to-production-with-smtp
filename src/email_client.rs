@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use lettre::message::{header, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::stub::AsyncStubTransport;
@@ -81,38 +83,70 @@ where
     }
 }
 
-pub fn create_email_client_stub_which_accepts_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
+pub fn create_email_client_stub_which_accepts_all_messages(
+    sender: SenderInfo,
+) -> EmailClient<StubMailTransport> {
     EmailClient {
         sender,
         transport: AsyncStubTransport::new_ok(),
     }
 }
 
-pub fn create_email_client_stub_which_denies_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
+pub fn create_email_client_stub_which_denies_all_messages(
+    sender: SenderInfo,
+) -> EmailClient<StubMailTransport> {
     EmailClient {
         sender,
         transport: AsyncStubTransport::new_error(),
     }
 }
 
-pub fn create_email_client(configuration: EmailClientSetting, sender: SenderInfo) -> EmailClient<MailTransport> {
+pub async fn create_email_client(
+    configuration: EmailClientSetting,
+    sender: SenderInfo,
+) -> EmailClient<MailTransport> {
     let credentials = create_credentials_from_configuration(&configuration);
 
-    let transport: MailTransport = create_async_smtp_transport(&configuration, credentials);
+    let transport: MailTransport = create_async_smtp_transport(&configuration, credentials).await;
 
     EmailClient { transport, sender }
 }
 
 fn create_credentials_from_configuration(configuration: &EmailClientSetting) -> Credentials {
-    Credentials::new(configuration.username.clone(), configuration.password.clone())
+    Credentials::new(
+        configuration.username.clone(),
+        configuration.password.clone(),
+    )
 }
 
-fn create_async_smtp_transport(configuration: &EmailClientSetting, credentials: Credentials) -> MailTransport {
-    MailTransport::relay(&configuration.smtp_server)
+async fn create_async_smtp_transport(
+    configuration: &EmailClientSetting,
+    credentials: Credentials,
+) -> MailTransport {
+    let transport = MailTransport::relay(&configuration.smtp_server)
         .unwrap()
         .credentials(credentials)
         .port(configuration.port)
-        .build()
+        .timeout(Some(Duration::from_secs(10)))
+        .build();
+
+    match transport.test_connection().await {
+        Ok(false) => {
+            tracing::error!(error.conifguration = ?configuration,
+            "SMTP credentials is incorrect");
+        }
+        Ok(_) => {}
+        Err(e) => {
+            tracing::error!(
+            error.cause_chain = ?e,
+            error.message = %e,
+            error.configuration = ?configuration,
+            "Failed to create SMTP connection",
+            )
+        }
+    };
+
+    transport
 }
 
 #[cfg(test)]
@@ -126,8 +160,8 @@ mod tests {
 
     use crate::domain::{SubscriberEmail, SubscriberName};
     use crate::email_client::{
-        create_email_client_stub_which_accepts_all_messages, create_email_client_stub_which_denies_all_messages,
-        SenderInfo,
+        create_email_client_stub_which_accepts_all_messages,
+        create_email_client_stub_which_denies_all_messages, SenderInfo,
     };
 
     fn subject() -> String {
@@ -160,7 +194,12 @@ mod tests {
         let subject: String = subject();
         let content: String = content();
         let result = email_client
-            .send_email(&subscriber_email, subject.clone(), content.clone(), content.clone())
+            .send_email(
+                &subscriber_email,
+                subject.clone(),
+                content.clone(),
+                content.clone(),
+            )
             .await;
         let transport_messages = email_client.transport.messages().await;
         let sent_email = transport_messages[0].clone();
@@ -175,7 +214,9 @@ mod tests {
             sent_email.0.from().unwrap(),
             &sender_email.as_ref().parse::<Address>().unwrap()
         );
-        assert!(sent_email.1.contains(&format!("{}: {}", "Subject", subject)));
+        assert!(sent_email
+            .1
+            .contains(&format!("{}: {}", "Subject", subject)));
         assert_eq!(transport_messages.len(), 1);
         assert!(result.is_ok());
     }

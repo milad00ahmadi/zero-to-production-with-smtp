@@ -162,6 +162,6 @@ pub async fn run_worker_until_stopped(configuration: Settings) -> Result<(), any
     let sender_email = configuration.email_client.sender().unwrap();
     let sender_name = SubscriberName::parse(configuration.email_client.name.clone()).unwrap();
     let sender = SenderInfo(sender_name, sender_email);
-    let email_client = email_client::create_email_client(configuration.email_client.clone(), sender);
+    let email_client = email_client::create_email_client(configuration.email_client.clone(), sender).await;
     worker_loop(connection_pool, email_client).await
 }
