@@ -4,7 +4,7 @@ on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.5.7
-  SQLX_FEATURES: "rustls,postgres"
+  SQLX_FEATURES: "postgres,runtime-actix-rustls"
 
 # A workflow run is made up of one or more jobs, which run in parallel by default
 # Each job runs in a runner environment specified by runs-on
