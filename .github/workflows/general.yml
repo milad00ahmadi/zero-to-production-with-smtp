@@ -1,7 +1,7 @@
 name: Rust
 
 on: [push, pull_request]
-cenv:
+env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.5.7
   SQLX_FEATURES: "rustls,postgres"
