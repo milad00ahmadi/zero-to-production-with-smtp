@@ -1,6 +1,5 @@
 use actix_web::{body::to_bytes, HttpResponse};
 
-
 use reqwest::StatusCode;
 use sqlx::{postgres::PgHasArrayType, PgPool, Postgres, Transaction};
 use uuid::Uuid;

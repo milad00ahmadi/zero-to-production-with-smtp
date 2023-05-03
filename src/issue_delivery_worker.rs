@@ -1,4 +1,4 @@
-use std::{time::Duration};
+use std::time::Duration;
 
 use lettre::AsyncTransport;
 use sqlx::{PgPool, Postgres, Transaction};
@@ -6,7 +6,7 @@ use tracing::{field::display, Span};
 use uuid::Uuid;
 
 use crate::{
-    configuration::{Settings},
+    configuration::Settings,
     domain::{SubscriberEmail, SubscriberName},
     email_client::{self, EmailClient, SenderInfo},
     startup::get_connection_pool,
@@ -25,7 +25,10 @@ pub enum ExecutionOutcome {
     ),
     err
 )]
-pub async fn try_execute_task<E>(pool: &PgPool, email_client: &EmailClient<E>) -> Result<ExecutionOutcome, anyhow::Error>
+pub async fn try_execute_task<E>(
+    pool: &PgPool,
+    email_client: &EmailClient<E>,
+) -> Result<ExecutionOutcome, anyhow::Error>
 where
     E: 'static + AsyncTransport + Send + Sync,
     <E as AsyncTransport>::Error: 'static + Send + Sync,

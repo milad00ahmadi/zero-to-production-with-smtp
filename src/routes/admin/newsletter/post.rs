@@ -1,8 +1,5 @@
 use std::fmt::Formatter;
 
-
-
-
 use actix_web::web::ReqData;
 use actix_web::{web, HttpResponse};
 use actix_web_flash_messages::FlashMessage;
@@ -11,11 +8,10 @@ use anyhow::Context;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
-use crate::authentication::{UserId};
+use crate::authentication::UserId;
 use crate::domain::SubscriberEmail;
 
 use crate::idempotency::{save_response, try_processing, IdempotencyKey, NextAction};
-
 
 use crate::utils::{e400, e500, see_other};
 
@@ -72,7 +68,7 @@ pub async fn publish_newsletter<T>(
 fn success_message() -> FlashMessage {
     FlashMessage::info(
         "The newsletter issue has been accepted - \
-        emails will go out shortly."
+        emails will go out shortly.",
     )
 }
 

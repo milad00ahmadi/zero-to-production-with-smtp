@@ -81,7 +81,6 @@ where
     }
 }
 
-
 pub fn create_email_client_stub_which_accepts_all_messages(sender: SenderInfo) -> EmailClient<StubMailTransport> {
     EmailClient {
         sender,
@@ -127,7 +126,8 @@ mod tests {
 
     use crate::domain::{SubscriberEmail, SubscriberName};
     use crate::email_client::{
-        create_email_client_stub_which_accepts_all_messages, create_email_client_stub_which_denies_all_messages, SenderInfo,
+        create_email_client_stub_which_accepts_all_messages, create_email_client_stub_which_denies_all_messages,
+        SenderInfo,
     };
 
     fn subject() -> String {

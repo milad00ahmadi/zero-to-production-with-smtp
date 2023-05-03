@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use actix_web::http::header::ContentType;
 use actix_web::HttpResponse;
-use actix_web_flash_messages::{IncomingFlashMessages};
+use actix_web_flash_messages::IncomingFlashMessages;
 
 pub async fn login_form(flash_messages: IncomingFlashMessages) -> HttpResponse {
     let mut msg_html = String::new();

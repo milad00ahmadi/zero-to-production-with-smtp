@@ -6,8 +6,8 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use anyhow::anyhow;
-use uuid::Uuid;
 use std::ops::Deref;
+use uuid::Uuid;
 
 use crate::{
     session_state::TypedSession,

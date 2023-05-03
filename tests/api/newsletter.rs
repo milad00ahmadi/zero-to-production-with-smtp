@@ -4,8 +4,6 @@ use fake::{
 };
 use lettre::transport::stub::AsyncStubTransport;
 
-
-
 use crate::helpers::{assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp, TestAppConfiguration};
 
 async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {

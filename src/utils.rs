@@ -1,7 +1,4 @@
-use actix_web::{
-    http::{header},
-    HttpResponse,
-};
+use actix_web::{http::header, HttpResponse};
 
 pub fn e400<T>(e: T) -> actix_web::Error
 where

@@ -6,7 +6,6 @@ use argon2::{
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
-
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
     #[error("Invalid credentials")]
