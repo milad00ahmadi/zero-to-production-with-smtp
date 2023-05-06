@@ -11,7 +11,7 @@ use crate::helpers::{
 async fn create_unconfirmed_subscribers(app: &TestApp) -> ConfirmationLinks {
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
-    let body = serde_urlencoded::to_string(serde_json::json!({
+    let body = serde_urlencoded::to_string(&serde_json::json!({
         "name": name,
         "email": email
     }))
