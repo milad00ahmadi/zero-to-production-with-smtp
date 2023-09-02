@@ -1,7 +1,9 @@
+use anyhow::Context;
 use std::time::Duration;
 
 use lettre::message::{header, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::smtp::client::{Tls, TlsParameters};
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 
@@ -123,11 +125,16 @@ async fn create_async_smtp_transport(
     configuration: &EmailClientSetting,
     credentials: Credentials,
 ) -> MailTransport {
+    let tls_settings = Tls::Opportunistic(
+        TlsParameters::new(configuration.smtp_server.clone())
+            .expect("SMTP server TLS domain is wrong"),
+    );
     let transport = MailTransport::relay(&configuration.smtp_server)
         .unwrap()
         .credentials(credentials)
         .port(configuration.port)
         .timeout(Some(Duration::from_secs(10)))
+        .tls(tls_settings)
         .build();
 
     match transport.test_connection().await {
